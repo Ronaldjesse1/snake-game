@@ -2,48 +2,89 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const inst = document.getElementById('inst');
 const context = canvas.getContext('2d');
-
-window.onload = function(){
-    context.fillStyle = 'blue';
-    context.font ="50px Verdana";
-    context.fillText('Use the arrow keys to change the direction of the snake');
-}
 let speed = 7;
-
-let tileCount = 20;
-let tileSize = canvas.width / tileCount - 2;
-let headX = 10;
-let headY = 10;
-
+let Box_count = 20;
+let Box_size = canvas.width / Box_count - 2;
+let head_x = 9;
+let head_y = 9;
 let score = 0;
 let appleX = 5;
 let appleY = 5;
 let xVelocity = 0;
 let yVelocity = 0;
+let BlockX
+let BlockY
+let tremblex = 0
+let trembley = 0
 var speedIncrement = false;
+let opacity = 1.0;
+let alphaFinal = 0.0;
+let alphaWeight = 1;
+const sound1 = new Audio("audio1.mp3")
+class Snake {
+    constructor({positionX, positionY}){
+        this.position = {
+            x: positionX,
+            y: positionY
+        }
+    }
+    draw(){
+        ctx.fillStyle = 'orange';
+        ctx.fillRect(this.position.x* Box_count + tremblex, this.position.y* Box_count + trembley, Box_size + tremblex, Box_size +trembley);
+        ctx.fillStyle = 'green';
+        for(let i=0;i<snakeParts.length; i++){
+            let part = snakeParts[i];
+            ctx.fillRect(part.x*Box_count, part.y*Box_count, Box_size, Box_size);
+            
+        }
+        snakeParts.push(new SnakePart(head_x, head_y));
+        while(snakeParts.length > taillength){
+            snakeParts.shift();
+        }
+    }
+}
+const snake = new Snake(head_x, head_y)
 function drawGame(){
     changeSnakePosition();
+    
+    clearScreen();
     let result = isGameOver();
     if(result){
         return;
     }
-    clearScreen();
-    
+  
     checkAppleCollision();
+    ctx.globalAlpha = opacity
     drawApple();
-    drawSnake();
+    snake.draw()
     drawScore();
+    newcontent()
+    opacity += alphaFinal
+    if (opacity >= 1.0) {
+        opacity = 1.0;
+        alphaFinal = -alphaWeight;
+    }
+    if (opacity <= 0.0) {
+        opacity = 0.0;
+        alphaFinal = alphaWeight;
+    }
+    console.log(opacity)
     setTimeout(drawGame, 1000/speed);
 }
 
+function newcontent(){
+    ctx.fillStyle = 'white'
+    ctx.fillRect(BlockX*Box_count, BlockY*Box_count, Box_size, Box_size)
+    
+}
 function clearScreen(){
     ctx.fillStyle = 'black';
-    ctx.fillRect(0,0,canvas.width, canvas.height);
+    ctx.fillRect(0,0, canvas.width, canvas.height);
 
 }
 function changeSnakePosition(){
-    headX = headX + xVelocity;
-    headY = headY + yVelocity;
+    head_x = head_x + xVelocity;
+    head_y = head_y + yVelocity;
 }
 function drawScore(){
     ctx.fillStyle = 'white';
@@ -52,84 +93,73 @@ function drawScore(){
 }
 function drawApple(){
     ctx.fillStyle = 'red';
-    ctx.fillRect(appleX*tileCount, appleY*tileCount, tileSize, tileSize);
+    ctx.fillRect(appleX*Box_count, appleY*Box_count, Box_size, Box_size);
 
 }
-function drawSnake(){
-    ctx.fillStyle = 'orange';
-    ctx.fillRect(headX * tileCount, headY * tileCount, tileSize, tileSize );
-    ctx.fillStyle = 'green';
-    for(let i=0;i<snakeParts.length; i++){
-        let part = snakeParts[i];
-        ctx.fillRect(part.x*tileCount, part.y*tileCount, tileSize, tileSize);
 
+
+document.body.addEventListener('keydown',
+    function(event){
+        if(event.key == "ArrowUp"){
+            if(yVelocity==1) return;
+            yVelocity = -1;
+            xVelocity = 0;
+        } 
+        if(event.key == "ArrowDown"){
+            if(yVelocity==-1) return;
+            yVelocity = 1;
+            xVelocity = 0;
+        } 
+        if(event.key == "ArrowLeft"){
+            if(xVelocity==1) return;
+            yVelocity = 0;
+            xVelocity = -1;
+        } 
+        if(event.key == "ArrowRight"){
+            if(xVelocity==-1) return;
+            yVelocity = 0;
+            xVelocity = 1;
+        } 
     }
-    snakeParts.push(new SnakePart(headX, headY));
-    while(snakeParts.length > taillength){
-        snakeParts.shift();
-    }
-}
-document.body.addEventListener('keydown', keyDown);
-function keyDown(event){
-    if(event.keyCode == 38){
-        if(yVelocity==1) return;
-        yVelocity = -1;
-        xVelocity = 0;
-    } 
-    if(event.keyCode == 40){
-        if(yVelocity==-1) return;
-        yVelocity = 1;
-        xVelocity = 0;
-    } 
-    if(event.keyCode == 37){
-        if(xVelocity==1) return;
-        yVelocity = 0;
-        xVelocity = -1;
-    } 
-    if(event.keyCode == 39){
-        if(xVelocity==-1) return;
-        yVelocity = 0;
-        xVelocity = 1;
-    } 
     
-}
+)
 function checkAppleCollision(){
-    if(appleX == headX && appleY == headY){
-        appleX = Math.floor(Math.random()*tileCount);
-        appleY = Math.floor(Math.random()*tileCount);
+    if(appleX == head_x && appleY == head_y){
+        appleX = Math.floor(Math.random()*Box_count)
+        appleY = Math.floor(Math.random()*Box_count)
+        BlockX = Math.floor(Math.random()*Box_count)
+        BlockY = Math.floor(Math.random()*Box_count)
         taillength ++;
         score ++;
         
-        speedIncrement = !speedIncrement;
-
-        if(speedIncrement)speed ++;
+        
     }
 }
 
 class SnakePart{
     constructor(x, y){
         this.x = x;
-        this.y=y;
+        this.y = y;
     }
 }
 const snakeParts = [];
 let taillength = 2;
 function isGameOver(){
-    if(yVelocity ===0 && xVelocity === 0) return false;
+    if(yVelocity === 0 && xVelocity === 0) return false;
     let gameOver = false; 
-    if(headX < 0){
+    if(head_x < -1){
         gameOver = true;
-    } else if(headX >= tileCount){
+    } else if(head_x >= Box_count+1){
         gameOver = true;
-    } else if(headY<0){
+    } else if(head_y<-1){
         gameOver= true;
-    } else if(headY >=tileCount){
+    } else if(head_y >=Box_count+1){
         gameOver = true;    
-    } 
-
+    } else if(head_x == BlockX&&head_y==BlockY) gameOver = true
+    console.log(head_x,head_y)
     for(let i=0; i <snakeParts.length;i++){
         let part = snakeParts[i];
-        if(part.x === headX && part.y === headY){
+        if(part.x === head_x && part.y === head_y){
             gameOver = true;
             break;
         }
@@ -143,6 +173,11 @@ function isGameOver(){
     }
     return gameOver;
 }
-const sound1 = new Audio("audio1.mp3")
+
 // const sound2 = new Audio("");
+
+
 drawGame();
+console.log(xVelocity)
+
+
