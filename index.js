@@ -2,6 +2,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const inst = document.getElementById('inst');
 const context = canvas.getContext('2d');
+const color  = ['blue', 'red', 'yellow', 'white','pink','green', 'purple']
 let speed = 7;
 let Box_count = 20;
 let Box_size = canvas.width / Box_count - 2;
@@ -20,7 +21,28 @@ var speedIncrement = false;
 let opacity = 1.0;
 let alphaFinal = 0.0;
 let alphaWeight = 1;
-const sound1 = new Audio("audio1.mp3")
+let previous_player_score;
+
+if (document.cookie != "") {
+    // let equals_i = document.cookie.indexOf("=");
+    // previous_player_score = parseInt(document.cookie.substring(equals_i + 1));
+    // console.log(document.cookie)
+    
+    let values = document.cookie.split(';');
+    for(let i = 0; i <values.length; i++) {
+        let c = values[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+    let [name, score_] = c.split("=");
+    alert(`user ${name}'s high score is: ${score_}`)
+    //   if (c.indexOf(score) == 0) {
+    //     score = c.substring(name.length, c.length);
+    //   }
+    }
+    if (score != 0) score = 0;
+} window.onload = function(){
+}
 class Snake {
     constructor({positionX, positionY}){
         this.position = {
@@ -34,6 +56,7 @@ class Snake {
         ctx.fillStyle = 'green';
         for(let i=0;i<snakeParts.length; i++){
             let part = snakeParts[i];
+            ctx.fillStyle = color[Math.floor(Math.random()*7)]
             ctx.fillRect(part.x*Box_count, part.y*Box_count, Box_size, Box_size);
             
         }
@@ -54,7 +77,7 @@ function drawGame(){
     }
   
     checkAppleCollision();
-    ctx.globalAlpha = opacity
+    virus.globalAlpha = opacity
     drawApple();
     snake.draw()
     drawScore();
@@ -71,10 +94,12 @@ function drawGame(){
     console.log(opacity)
     setTimeout(drawGame, 1000/speed);
 }
-
+const image1 = new Image();
+const virus = new Image();
+virus.src = "virus.png"
+image1.src = 'game.png'
 function newcontent(){
-    ctx.fillStyle = 'white'
-    ctx.fillRect(BlockX*Box_count, BlockY*Box_count, Box_size, Box_size)
+    ctx.drawImage(virus, BlockX*Box_count, BlockY*Box_count, Box_size, Box_size)
     
 }
 function clearScreen(){
@@ -94,7 +119,7 @@ function drawScore(){
 function drawApple(){
     ctx.fillStyle = 'red';
     ctx.fillRect(appleX*Box_count, appleY*Box_count, Box_size, Box_size);
-
+    ctx.drawImage(image1, appleX*Box_count, appleY*Box_count, Box_size, Box_size);
 }
 
 
@@ -125,6 +150,7 @@ document.body.addEventListener('keydown',
 )
 function checkAppleCollision(){
     if(appleX == head_x && appleY == head_y){
+        sound1.play()
         appleX = Math.floor(Math.random()*Box_count)
         appleY = Math.floor(Math.random()*Box_count)
         BlockX = Math.floor(Math.random()*Box_count)
@@ -147,13 +173,13 @@ let taillength = 2;
 function isGameOver(){
     if(yVelocity === 0 && xVelocity === 0) return false;
     let gameOver = false; 
-    if(head_x < -1){
+    if(head_x < 0){
         gameOver = true;
-    } else if(head_x >= Box_count+1){
+    } else if(head_x >= Box_count){
         gameOver = true;
-    } else if(head_y<-1){
+    } else if(head_y<0){
         gameOver= true;
-    } else if(head_y >=Box_count+1){
+    } else if(head_y >=Box_count){
         gameOver = true;    
     } else if(head_x == BlockX&&head_y==BlockY) gameOver = true
     console.log(head_x,head_y)
@@ -166,18 +192,35 @@ function isGameOver(){
     }
 
     if(gameOver){
+        sound2.play()
         ctx.fillStyle = 'white';
         ctx.font ='50px Verdana';
         ctx.fillText("Game Over!!", canvas.width / 6.5, canvas.height/2);
         sound1.play();
+        document.cookie = "";
+        if (score > 0)
+            document.cookie = "user=" + score;
     }
     return gameOver;
 }
-
-// const sound2 = new Audio("");
+const sound1 = new Audio('ore.mp3')
+const sound2 = new Audio("audio1.mp3");
 
 
 drawGame();
 console.log(xVelocity)
 
+function checkCookie() {
+    let user = getCookie("username");
+    if (user != "") {
+      alert("Welcome again " + user);
+    } else {
+       user = prompt("Please enter your name:","");
+       if (user != "" && user != null) {
+         cookieEntry(user)
+       }
+    }
+  }
+function cookieEntry(user){
 
+}
